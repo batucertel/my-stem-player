@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>8-Track Stem Player</title>
+  <style>
+    body { font-family: sans-serif; }
+    .track { margin: 10px 0; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+    button { margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <h2>My 8-Track Stem Player</h2>
+
+  <button onclick="playAll()">Play All</button>
+  <button onclick="pauseAll()">Pause All</button>
+
+  <div id="tracks"></div>
+
+  <script>
+    const stems = {
+      t1: new Audio("track1.mp3"),
+      t2: new Audio("track2.mp3"),
+      t3: new Audio("track3.mp3"),
+      t4: new Audio("track4.mp3"),
+      t5: new Audio("track5.mp3"),
+      t6: new Audio("track6.mp3"),
+      t7: new Audio("track7.mp3"),
+      t8: new Audio("track8.mp3"),
+    };
+
+    // initial setup
+    Object.values(stems).forEach(audio => {
+      audio.loop = true;
+    });
+
+    let soloTrack = null; // which track is soloed
+
+    function playAll() {
+      Object.values(stems).forEach(audio => {
+        audio.currentTime = 0;
+        audio.play();
+      });
+    }
+
+    function pauseAll() {
+      Object.values(stems).forEach(audio => audio.pause());
+    }
+
+    function toggleMute(trackKey, btn) {
+      const audio = stems[trackKey];
+      audio.muted = !audio.muted;
+      btn.textContent = audio.muted ? "Unmute" : "Mute";
+    }
+
+    function toggleSolo(trackKey, btn) {
+      if (soloTrack === trackKey) {
+        // turn off solo
+        soloTrack = null;
+        btn.textContent = "Solo";
+        Object.values(stems).forEach(a => a.muted = false);
+      } else {
+        // set solo
+        soloTrack = trackKey;
+        // mute all others
+        Object.keys(stems).forEach(k => {
+          stems[k].muted = (k !== trackKey);
+        });
+        // update buttons
+        document.querySelectorAll(".soloBtn").forEach(b => b.textContent = "Solo");
+        btn.textContent = "Unsolo";
+      }
+    }
+
+    // build UI dynamically
+    const container = document.getElementById("tracks");
+    Object.keys(stems).forEach((key, i) => {
+      const div = document.createElement("div");
+      div.className = "track";
+      div.innerHTML = `
+        <label>Track ${i+1}</label>
+        <input type="range" min="0" max="1" step="0.01" value="1" id="${key}Vol">
+        <button onclick="toggleMute('${key}', this)">Mute</button>
+        <button class="soloBtn" onclick="toggleSolo('${key}', this)">Solo</button>
+      `;
+      container.appendChild(div);
+
+      // hook up volume
+      document.addEventListener("input", e => {
+        if (e.target.id === `${key}Vol`) {
+          stems[key].volume = e.target.value;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
